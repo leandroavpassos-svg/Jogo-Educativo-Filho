@@ -3,66 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo das Letras e Objetos</title>
+    <title>Alfabeto do Benício</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
-        body { font-family: 'Comic Neue', cursive; background-color: #FFDE59; }
+        body { font-family: 'Comic Neue', cursive; background: linear-gradient(135deg, #FFDE59 0%, #FF914D 100%); overflow: hidden; }
+        .bounce-hover:active { transform: scale(0.9); }
+        .letter-card { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes success { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .animate-success { animation: success 0.5s ease-in-out; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
-    <div id="game-card" class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center border-8 border-orange-400">
-        <h1 class="text-3xl font-bold text-orange-600 mb-6">Qual objeto começa com a letra?</h1>
+    <div id="game-container" class="bg-white rounded-[40px] shadow-2xl p-8 max-w-md w-full text-center border-[12px] border-white/50 relative">
         
-        <div id="letter" class="text-9xl font-black text-blue-600 mb-8 animate-bounce">A</div>
+        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-yellow-400 text-white px-6 py-2 rounded-full shadow-lg border-4 border-white text-xl font-black">
+            ⭐ <span id="points">0</span>
+        </div>
 
-        <div class="grid grid-cols-2 gap-4" id="options">
+        <h1 class="text-2xl font-bold text-gray-700 mt-4 mb-2">Com que letra começa?</h1>
+        
+        <div id="main-emoji" class="text-9xl my-8 drop-shadow-xl cursor-pointer hover:scale-110 transition-transform">
+            🍎
+        </div>
+
+        <p id="object-name" class="text-3xl font-black text-orange-500 mb-8 uppercase tracking-widest">Maçã</p>
+
+        <div id="options-grid" class="grid grid-cols-2 gap-4">
             </div>
 
-        <div id="feedback" class="mt-6 text-2xl font-bold h-8"></div>
+        <div id="feedback" class="h-12 mt-6 flex items-center justify-center text-2xl font-black"></div>
     </div>
 
     <script>
         const levels = [
-            { letter: 'A', options: ['🍎 Maçã', '✈️ Avião', '🐶 Cachorro', '🐱 Gato'], correct: 1 },
-            { letter: 'B', options: ['🚗 Carro', '🍌 Banana', '⚽ Bola', '🐘 Elefante'], correct: 2 },
-            { letter: 'C', options: ['🏠 Casa', '🍦 Sorvete', '☀️ Sol', '🌙 Lua'], correct: 0 }
+            { obj: '🍎', nome: 'Maçã', letra: 'M', cores: ['M', 'A', 'B', 'C'] },
+            { obj: '✈️', nome: 'Avião', letra: 'A', cores: ['E', 'A', 'O', 'I'] },
+            { obj: '⚽', nome: 'Bola', letra: 'B', cores: ['P', 'D', 'B', 'V'] },
+            { obj: '🐶', nome: 'Cão', letra: 'C', cores: ['G', 'Q', 'C', 'K'] },
+            { obj: '🐘', nome: 'Elefante', letra: 'E', cores: ['U', 'A', 'O', 'E'] },
+            { obj: '🚗', nome: 'Carro', letra: 'C', cores: ['C', 'T', 'K', 'S'] },
+            { obj: '🍦', nome: 'Sorvete', letra: 'S', cores: ['S', 'Z', 'C', 'F'] },
+            { obj: '🦁', nome: 'Leão', letra: 'L', cores: ['L', 'I', 'M', 'N'] }
         ];
 
         let currentLevel = 0;
+        let score = 0;
+        const colors = ['#FF5757', '#38B6FF', '#7ED957', '#FF914D', '#CB6CE6', '#FFBD59'];
 
-        function loadLevel() {
-            const level = levels[currentLevel];
-            document.getElementById('letter').innerText = level.letter;
-            const optionsDiv = document.getElementById('options');
-            optionsDiv.innerHTML = '';
-            document.getElementById('feedback').innerText = '';
-
-            level.options.forEach((opt, index) => {
-                const btn = document.createElement('button');
-                btn.className = "text-2xl bg-gray-100 hover:bg-orange-200 border-4 border-gray-200 rounded-2xl p-4 transition-all transform active:scale-95";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(index);
-                optionsDiv.appendChild(btn);
-            });
+        // Função para falar
+        function falar(texto) {
+            const synth = window.speechSynthesis;
+            const utter = new SpeechSynthesisUtterance(texto);
+            utter.lang = 'pt-BR';
+            synth.speak(utter);
         }
 
-        function checkAnswer(index) {
+        // Som de beep (para não precisar de arquivos)
+        function tocarSom(frequencia) {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            osc.connect(gain);
+            gain.connect(context.destination);
+            osc.frequency.value = frequencia;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.5);
+            osc.stop(context.currentTime + 0.5);
+        }
+
+        function carregarFase() {
+            const fase = levels[currentLevel];
+            document.getElementById('main-emoji').innerText = fase.obj;
+            document.getElementById('object-name').innerText = fase.nome;
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            document.getElementById('feedback').innerText = '';
+
+            fase.cores.forEach((letra, i) => {
+                const btn = document.createElement('button');
+                btn.className = "letter-card h-24 text-5xl font-black rounded-3xl border-b-8 active:border-b-0 active:translate-y-2 transition-all shadow-xl text-white";
+                btn.style.backgroundColor = colors[i % colors.length];
+                btn.style.borderColor = 'rgba(0,0,0,0.1)';
+                btn.innerText = letra;
+                btn.onclick = () => verificar(letra, fase.letra);
+                grid.appendChild(btn);
+            });
+            falar(fase.nome);
+        }
+
+        function verificar(escolhida, correta) {
             const feedback = document.getElementById('feedback');
-            if (index === levels[currentLevel].correct) {
-                feedback.innerText = "🌟 PARABÉNS! ACERTOU!";
-                feedback.className = "mt-6 text-2xl font-bold text-green-500";
+            if (escolhida === correta) {
+                tocarSom(523.25); // Dó
+                tocarSom(659.25); // Mi
+                falar("Muito bem! " + correta);
+                score += 10;
+                document.getElementById('points').innerText = score;
+                feedback.innerText = "🌟 INCRÍVEL!";
+                feedback.className = "mt-6 text-green-500 text-3xl animate-bounce font-black";
+                
                 setTimeout(() => {
                     currentLevel = (currentLevel + 1) % levels.length;
-                    loadLevel();
-                }, 2000);
+                    carregarFase();
+                }, 1500);
             } else {
-                feedback.innerText = "❌ Tente de novo!";
-                feedback.className = "mt-6 text-2xl font-bold text-red-500";
+                tocarSom(220); // Som baixo para erro
+                falar("Tente de novo");
+                feedback.innerText = "❌ Quase lá!";
+                feedback.className = "mt-6 text-red-400 text-2xl font-black";
+                setTimeout(() => feedback.innerText = '', 1000);
             }
         }
 
-        loadLevel();
+        // Iniciar
+        carregarFase();
     </script>
 </body>
 </html>
