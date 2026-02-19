@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo das Letras e Objetos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+        body { font-family: 'Comic Neue', cursive; background-color: #FFDE59; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div id="game-card" class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center border-8 border-orange-400">
+        <h1 class="text-3xl font-bold text-orange-600 mb-6">Qual objeto começa com a letra?</h1>
+        
+        <div id="letter" class="text-9xl font-black text-blue-600 mb-8 animate-bounce">A</div>
+
+        <div class="grid grid-cols-2 gap-4" id="options">
+            </div>
+
+        <div id="feedback" class="mt-6 text-2xl font-bold h-8"></div>
+    </div>
+
+    <script>
+        const levels = [
+            { letter: 'A', options: ['🍎 Maçã', '✈️ Avião', '🐶 Cachorro', '🐱 Gato'], correct: 1 },
+            { letter: 'B', options: ['🚗 Carro', '🍌 Banana', '⚽ Bola', '🐘 Elefante'], correct: 2 },
+            { letter: 'C', options: ['🏠 Casa', '🍦 Sorvete', '☀️ Sol', '🌙 Lua'], correct: 0 }
+        ];
+
+        let currentLevel = 0;
+
+        function loadLevel() {
+            const level = levels[currentLevel];
+            document.getElementById('letter').innerText = level.letter;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            document.getElementById('feedback').innerText = '';
+
+            level.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "text-2xl bg-gray-100 hover:bg-orange-200 border-4 border-gray-200 rounded-2xl p-4 transition-all transform active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(index) {
+            const feedback = document.getElementById('feedback');
+            if (index === levels[currentLevel].correct) {
+                feedback.innerText = "🌟 PARABÉNS! ACERTOU!";
+                feedback.className = "mt-6 text-2xl font-bold text-green-500";
+                setTimeout(() => {
+                    currentLevel = (currentLevel + 1) % levels.length;
+                    loadLevel();
+                }, 2000);
+            } else {
+                feedback.innerText = "❌ Tente de novo!";
+                feedback.className = "mt-6 text-2xl font-bold text-red-500";
+            }
+        }
+
+        loadLevel();
+    </script>
+</body>
+</html>
