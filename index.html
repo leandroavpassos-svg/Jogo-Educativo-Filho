@@ -3,121 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alfabeto do Benício</title>
+    <title>Educação Kids - Benício</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Comic Neue', cursive; background: linear-gradient(135deg, #FFDE59 0%, #FF914D 100%); overflow: hidden; }
-        .bounce-hover:active { transform: scale(0.9); }
-        .letter-card { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes success { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .animate-success { animation: success 0.5s ease-in-out; }
+        body { font-family: 'Comic Neue', cursive; background-color: #fdf6e3; }
+        .menu-card { transition: all 0.3s ease; cursor: pointer; }
+        .menu-card:hover { transform: translateY(-10px); }
+        .btn-option { transition: all 0.2s; border-bottom: 6px solid rgba(0,0,0,0.2); }
+        .btn-option:active { border-bottom: 0; transform: translateY(4px); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div id="game-container" class="bg-white rounded-[40px] shadow-2xl p-8 max-w-md w-full text-center border-[12px] border-white/50 relative">
-        
-        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-yellow-400 text-white px-6 py-2 rounded-full shadow-lg border-4 border-white text-xl font-black">
-            ⭐ <span id="points">0</span>
-        </div>
+<body class="min-h-screen p-4 flex flex-col items-center">
 
-        <h1 class="text-2xl font-bold text-gray-700 mt-4 mb-2">Com que letra começa?</h1>
-        
-        <div id="main-emoji" class="text-9xl my-8 drop-shadow-xl cursor-pointer hover:scale-110 transition-transform">
-            🍎
-        </div>
+    <div id="screen-menu" class="w-full max-w-4xl">
+        <header class="text-center my-8">
+            <h1 class="text-4xl font-black text-orange-500">Educação Kids</h1>
+            <p class="text-gray-500 italic">Aprenda brincando!</p>
+        </header>
 
-        <p id="object-name" class="text-3xl font-black text-orange-500 mb-8 uppercase tracking-widest">Maçã</p>
-
-        <div id="options-grid" class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div onclick="startGame('abc')" class="menu-card bg-red-500 p-8 rounded-[30px] text-white text-center shadow-xl">
+                <div class="text-6xl mb-4">🍎</div>
+                <h2 class="text-3xl font-black">ABC</h2>
+                <p>Animais e Objetos</p>
             </div>
+            <div onclick="startGame('123')" class="menu-card bg-emerald-500 p-8 rounded-[30px] text-white text-center shadow-xl">
+                <div class="text-6xl mb-4">🔢</div>
+                <h2 class="text-3xl font-black">123</h2>
+                <p>Números</p>
+            </div>
+            <div onclick="startGame('formas')" class="menu-card bg-amber-500 p-8 rounded-[30px] text-white text-center shadow-xl">
+                <div class="text-6xl mb-4">📐</div>
+                <h2 class="text-3xl font-black">Formas</h2>
+                <p>Qual a forma?</p>
+            </div>
+        </div>
+    </div>
 
-        <div id="feedback" class="h-12 mt-6 flex items-center justify-center text-2xl font-black"></div>
+    <div id="screen-game" class="hidden w-full max-w-md bg-white rounded-[40px] shadow-2xl p-6 border-8 border-white relative mt-10">
+        <button onclick="showMenu()" class="absolute -top-4 -left-4 bg-gray-200 p-3 rounded-full shadow-md">⬅️</button>
+        
+        <div class="flex justify-between items-center mb-6">
+            <div id="game-info" class="text-sm font-bold text-gray-400 uppercase tracking-widest">Rodada 1 | A-Z</div>
+            <div class="bg-yellow-400 text-white px-4 py-1 rounded-full font-black shadow-sm">⭐ <span id="score">0</span></div>
+        </div>
+
+        <div class="flex justify-center mb-6 bg-gray-100 p-1 rounded-2xl">
+            <button id="mode-obj-to-let" onclick="setMode('objToLet')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600">QUAL LETRA?</button>
+            <button id="mode-let-to-obj" onclick="setMode('letToObj')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all text-gray-400">QUAL DESENHO?</button>
+        </div>
+
+        <div class="text-center">
+            <div id="display-principal" class="text-9xl mb-4 drop-shadow-lg animate-bounce">🍎</div>
+            <h3 id="display-nome" class="text-2xl font-black text-gray-700 mb-8 uppercase">MAÇÃ</h3>
+            
+            <div id="options-grid" class="grid grid-cols-3 gap-4">
+                </div>
+        </div>
+
+        <div id="feedback" class="h-16 mt-8 flex items-center justify-center text-3xl font-black"></div>
     </div>
 
     <script>
-        const levels = [
-            { obj: '🍎', nome: 'Maçã', letra: 'M', cores: ['M', 'A', 'B', 'C'] },
-            { obj: '✈️', nome: 'Avião', letra: 'A', cores: ['E', 'A', 'O', 'I'] },
-            { obj: '⚽', nome: 'Bola', letra: 'B', cores: ['P', 'D', 'B', 'V'] },
-            { obj: '🐶', nome: 'Cão', letra: 'C', cores: ['G', 'Q', 'C', 'K'] },
-            { obj: '🐘', nome: 'Elefante', letra: 'E', cores: ['U', 'A', 'O', 'E'] },
-            { obj: '🚗', nome: 'Carro', letra: 'C', cores: ['C', 'T', 'K', 'S'] },
-            { obj: '🍦', nome: 'Sorvete', letra: 'S', cores: ['S', 'Z', 'C', 'F'] },
-            { obj: '🦁', nome: 'Leão', letra: 'L', cores: ['L', 'I', 'M', 'N'] }
-        ];
+        // BANCO DE DADOS (Expandível para muitas rodadas)
+        const db = {
+            abc: [
+                { letra: 'A', items: [{n: 'Abelha', e: '🐝'}, {n: 'Avião', e: '✈️'}, {n: 'Anel', e: '💍'}] },
+                { letra: 'B', items: [{n: 'Bola', e: '⚽'}, {n: 'Baleia', e: '🐳'}, {n: 'Banana', e: '🍌'}] },
+                { letra: 'C', items: [{n: 'Casa', e: '🏠'}, {n: 'Carro', e: '🚗'}, {n: 'Coelho', e: '🐰'}] },
+                { letra: 'D', items: [{n: 'Dado', e: '🎲'}, {n: 'Dedo', e: '☝️'}, {n: 'Dinossauro', e: '🦖'}] }
+                // Adicione as outras letras seguindo este padrão
+            ],
+            '123': [
+                { letra: '1', items: [{n: 'Um', e: '☝️'}] },
+                { letra: '2', items: [{n: 'Dois', e: '✌️'}] },
+                { letra: '5', items: [{n: 'Cinco', e: '🖐️'}] }
+            ],
+            formas: [
+                { letra: 'Quadrado', items: [{n: 'Quadrado', e: '🟦'}] },
+                { letra: 'Círculo', items: [{n: 'Círculo', e: '🔴'}] }
+            ]
+        };
 
-        let currentLevel = 0;
+        let currentGame = 'abc';
+        let currentLevelIndex = 0; // De 0 a 25 (A-Z)
+        let currentRound = 1;      // Rodada atual (usada para pegar o item 1, 2 ou 3 da lista)
+        let mode = 'objToLet';     // objToLet ou letToObj
         let score = 0;
-        const colors = ['#FF5757', '#38B6FF', '#7ED957', '#FF914D', '#CB6CE6', '#FFBD59'];
 
-        // Função para falar
-        function falar(texto) {
-            const synth = window.speechSynthesis;
-            const utter = new SpeechSynthesisUtterance(texto);
-            utter.lang = 'pt-BR';
-            synth.speak(utter);
+        function falar(t) {
+            const u = new SpeechSynthesisUtterance(t);
+            u.lang = 'pt-BR';
+            window.speechSynthesis.speak(u);
         }
 
-        // Som de beep (para não precisar de arquivos)
-        function tocarSom(frequencia) {
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = context.createOscillator();
-            const gain = context.createGain();
+        function playApplause() {
+            // Som de palmas via frequência (Sintetizado)
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'noise'; // Simplificado para o exemplo
             osc.connect(gain);
-            gain.connect(context.destination);
-            osc.frequency.value = frequencia;
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.5);
-            osc.stop(context.currentTime + 0.5);
+            gain.connect(ctx.destination);
+            falar("Parabéns!"); 
         }
 
-        function carregarFase() {
-            const fase = levels[currentLevel];
-            document.getElementById('main-emoji').innerText = fase.obj;
-            document.getElementById('object-name').innerText = fase.nome;
+        function showMenu() {
+            document.getElementById('screen-menu').classList.remove('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+        }
+
+        function startGame(type) {
+            currentGame = type;
+            currentLevelIndex = 0;
+            currentRound = 1;
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            loadLevel();
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('mode-obj-to-let').className = m === 'objToLet' ? "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600" : "px-4 py-2 rounded-xl text-xs font-bold transition-all text-gray-400";
+            document.getElementById('mode-let-to-obj').className = m === 'letToObj' ? "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600" : "px-4 py-2 rounded-xl text-xs font-bold transition-all text-gray-400";
+            loadLevel();
+        }
+
+        function loadLevel() {
+            const data = db[currentGame][currentLevelIndex];
+            // Seleciona o item baseado na rodada (se a rodada for maior que os itens disponíveis, usa o resto)
+            const itemIndex = (currentRound - 1) % data.items.length;
+            const item = data.items[itemIndex];
+            
+            const displayP = document.getElementById('display-principal');
+            const displayN = document.getElementById('display-nome');
             const grid = document.getElementById('options-grid');
             grid.innerHTML = '';
             document.getElementById('feedback').innerText = '';
+            document.getElementById('game-info').innerText = `Rodada ${currentRound} | Letra ${data.letra}`;
 
-            fase.cores.forEach((letra, i) => {
-                const btn = document.createElement('button');
-                btn.className = "letter-card h-24 text-5xl font-black rounded-3xl border-b-8 active:border-b-0 active:translate-y-2 transition-all shadow-xl text-white";
-                btn.style.backgroundColor = colors[i % colors.length];
-                btn.style.borderColor = 'rgba(0,0,0,0.1)';
-                btn.innerText = letra;
-                btn.onclick = () => verificar(letra, fase.letra);
-                grid.appendChild(btn);
-            });
-            falar(fase.nome);
-        }
-
-        function verificar(escolhida, correta) {
-            const feedback = document.getElementById('feedback');
-            if (escolhida === correta) {
-                tocarSom(523.25); // Dó
-                tocarSom(659.25); // Mi
-                falar("Muito bem! " + correta);
-                score += 10;
-                document.getElementById('points').innerText = score;
-                feedback.innerText = "🌟 INCRÍVEL!";
-                feedback.className = "mt-6 text-green-500 text-3xl animate-bounce font-black";
-                
-                setTimeout(() => {
-                    currentLevel = (currentLevel + 1) % levels.length;
-                    carregarFase();
-                }, 1500);
+            if (mode === 'objToLet') {
+                displayP.innerText = item.e;
+                displayN.innerText = item.n;
+                generateOptions(data.letra, 'text');
+                falar(item.n);
             } else {
-                tocarSom(220); // Som baixo para erro
-                falar("Tente de novo");
-                feedback.innerText = "❌ Quase lá!";
-                feedback.className = "mt-6 text-red-400 text-2xl font-black";
-                setTimeout(() => feedback.innerText = '', 1000);
+                displayP.innerText = data.letra;
+                displayN.innerText = "Qual o desenho?";
+                generateOptions(item.e, 'emoji');
+                falar(data.letra);
             }
         }
 
-        // Iniciar
-        carregarFase();
+        function generateOptions(correct, type) {
+            const grid = document.getElementById('options-grid');
+            let options = [correct];
+            
+            // Gera 2 opções erradas aleatórias
+            while(options.length < 3) {
+                const randomLevel = db[currentGame][Math.floor(Math.random() * db[currentGame].length)];
+                const randomItem = randomLevel.items[0];
+                const val = type === 'text' ? randomLevel.letra : randomItem.e;
+                if(!options.includes(val)) options.push(val);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "btn-option bg-blue-500 text-white text-3xl p-6 rounded-2xl shadow-lg font-black";
+                btn.innerText = opt;
+                btn.onclick = () => check(opt, correct);
+                grid.appendChild(btn);
+            });
+        }
+
+        function check(sel, cor) {
+            const f = document.getElementById('feedback');
+            if (sel === cor) {
+                f.innerText = "👏 ACERTOU!";
+                f.className = "mt-8 text-green-500 text-3xl font-black animate-bounce";
+                score += 10;
+                document.getElementById('score').innerText = score;
+                playApplause();
+
+                setTimeout(() => {
+                    currentLevelIndex++;
+                    if (currentLevelIndex >= db[currentGame].length) {
+                        currentLevelIndex = 0;
+                        currentRound++;
+                    }
+                    loadLevel();
+                }, 2000);
+            } else {
+                f.innerText = "❌ TENTA DE NOVO";
+                f.className = "mt-8 text-red-500 text-2xl font-black";
+                falar("Tente de novo");
+            }
+        }
     </script>
 </body>
 </html>
